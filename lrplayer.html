@@ -1,0 +1,983 @@
+<!--
+2018.11.23
+1. scroll to top at the end of each "loadAll"
+
+2018.08.20
+1. add audio control
+  1) left arrow: backward 5s
+  2) right arrow: forward 5s
+  3) p or / : play/pause
+
+2018.08.16
+1. Add tooltip style and text
+2. Use tooltip for instruction
+
+2018.07.20
+1. Add google form and button link to submit comments
+
+2017.11.12
+1. Add function to toggle (hide/show) Master's teaching text
+2. Add functions to increase/reduce font size for the teaching text
+
+2017.11.2
+1. change moveup/movedown button function from click to mousedown/mouseup
+2. add Previous/Next load buttons
+-->
+
+<html>
+<head>
+<title>廣論字幕播放</title>
+<meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<link rel="stylesheet" href="http://localhost/~yochen/LR/trans/css/simple-dialog.css" type="text/css" media="all" />
+<link rel="icon" href="data:,">
+<style>
+#mediaBlock {
+  position: absolute;
+  right: 0;
+  top: 30;
+  padding:0px 0px 0 0;
+  width:25%;
+  background-color: #E6E6E6;
+}
+
+audio {
+  width:100%;
+}
+
+label {
+  width:inherit;
+  float:left;
+}
+
+div#text {
+  margin:0;
+  width:70%;
+}
+
+a.time_backup {
+  display:list-item;
+  padding-left:10px;
+  text-indent:0px;
+  text-decoration:none;
+}
+
+div.stamp {
+  display:inline;
+  padding-left:0px;
+  text-indent:0px;
+  text-decoration:none;
+  color:green;
+  font-weight:normal;
+  font-size:80%;
+}
+
+a.time {
+  display:inline;
+  padding-left:0px;
+  text-indent:0px;
+  text-decoration:none;
+  color:black;
+}
+
+div.LRtext {
+  display:inline;
+  padding-left:0px;
+  text-indent:0px;
+  text-decoration:none;
+  /* color:#2a6496; */
+  color:navy;
+  font-weight:bold;
+}
+
+div.SFtext {
+  display:inline;
+  text-decoration:none;
+  /* color:#2a6496; */
+  color:black;
+}
+
+a.highlight {
+    background-color:#FCFCA9;
+}
+
+p#pastebox {
+    clear:both;
+}
+
+p.paragraph>a.time, p.paragraph>a.LRtext {
+    display:inline;
+    padding:0;
+    text-indent:0;
+}
+
+p.paragraph>a.time:hover {
+    color:black;
+    background-color:yellow;
+}
+
+p.paragraph>a.time:visited, p.paragraph>a.time:link, p.paragraph>a.time:active {
+    color:black;
+    text-decoration:none;
+}
+
+p.paragraph>a.LRtext:hover {
+    color:#2a6496;
+    background-color:yellow;
+}
+
+p.paragraph>a.LRtext:visited, p.paragraph>a.LRtext:link, p.paragraph>a.LRtext:active {
+    color:black;
+    text-decoration:none;
+}
+
+.clear {
+    clear: both;
+}
+input.switch:empty {
+    margin-left: -999px;
+}
+input.switch:empty ~ label {
+    position: relative;
+    float: left;
+    line-height: 1.6em;
+    text-indent: 4em;
+    margin: 0.2em 0;
+    cursor: pointer;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
+input.switch:empty ~ label:before, input.switch:empty ~ label:after {
+    position: absolute;
+    display: block;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    content:' ';
+    width: 3.6em;
+    background-color: #c33;
+    border-radius: 0.3em;
+    box-shadow: inset 0 0.2em 0 rgba(0, 0, 0, 0.3);
+    -webkit-transition: all 100ms ease-in;
+    transition: all 100ms ease-in;
+}
+input.switch:empty ~ label:after {
+    width: 1.4em;
+    top: 0.1em;
+    bottom: 0.1em;
+    margin-left: 0.1em;
+    background-color: #fff;
+    border-radius: 0.15em;
+    box-shadow: inset 0 -0.2em 0 rgba(0, 0, 0, 0.2);
+}
+input.switch:checked ~ label:before {
+    background-color: #393;
+}
+input.switch:checked ~ label:after {
+    margin-left: 2em;
+}
+
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+    font-size:100%;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 400%;
+    background-color: #666666;
+    color: #fff;
+    text-align: left;
+    border-radius: 6px;
+    padding: 5px 0;
+    font-size:80%;
+
+
+    /* Position the tooltip */
+    position: absolute;
+    z-index: 1;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    white-space: pre-wrap;
+}
+
+</style>
+<!-- 
+<script src="http://ajax.microsoft.com/ajax/jquery/jquery-1.4.2.min.js" type="text/javascript"></script>
+<script>!window.jQuery && document.write('<script src="js/jquery-1.4.2.min.js"><\/script>')</script>
+<script src="http://javascript-simple-dialog.googlecode.com/svn/trunk/simple-dialog.js" type="text/javascript"></script>
+--!>
+<script src="http://localhost/~yochen/LR/trans/js/jquery-1.4.2.min.js" type="text/javascript"></script>
+<script src="http://localhost/~yochen/LR/trans/js/simple-dialog.js" type="text/javascript"></script>
+</head>
+<body style="background-color:#F7F5E5;">
+<div id='mediaBlock'>
+<audio controls autobuffer >Your browser does not support HTML5
+<script>
+  var audio = $("audio")[0];
+  $(document).keydown(function(e) {
+    var unicode = e.charCode ? e.charCode : e.keyCode;
+//    console.log(unicode);
+      // right arrow
+    if (unicode == 39) {
+      audio.currentTime += 5;
+      // back arrow
+    } else if (unicode == 37) {
+      audio.currentTime -= 5;
+      // spacebar(unicode=32); p(80), /(191)
+    } else if (unicode == 80 | unicode == 191 ) {
+      if (audio.paused) {
+        audio.play();
+      } 
+      else {
+        audio.pause()
+      }
+    }
+  });
+</script>
+</audio> <br />
+<br /> <br />
+<!--
+<div style="font-size: 110%; text-align: left; color: blue;"><a id="translateLink"></a></div>
+<br />
+-->
+<button id='scroll' type="button">Scroll to current text</button><br/>
+<select id="autoscroll"><option value="on">Autoscroll On</option><option value="off">Autoscroll Off</option></select>
+<br /> <br />
+<input id="source" type="number" name="source" min="1" max="160" step="1" value="1" /> 
+<select id="sourceAB"> <option value="A">A</option><option value="B">B</option></select>
+<button align='right' id='moveup' type="button">+</button> 
+<button align='right' id='movedown' type="button">-</button> 
+<br />
+<button align='right' id='loadAll' type="button">Load mp3 and text</button> 
+<br />
+<button align='right' id='loadAllPrevious' type="button">Previous</button> 
+<button align='right' id='loadAllNext' type="button">Next</button> 
+<br />
+<br />
+<button align='right' id='toggleSFtext' type="button">隱藏／顯示 師父開示</button> 
+<br />
+<br />
+<button align='right' id='largerFont' type="button">字體 大+</button> 
+<button align='right' id='smallerFont' type="button">字體 小-</button> 
+<br />
+<br />
+<div class="tooltip">使用說明
+  <span class="tooltiptext">1）选择音档卷数
+2）點擊"Load mp3 and text"
+      點擊"Previous" "Next"選擇上一講/下一講
+3）點擊播放鍵或點擊任何一段文字
+4）播放控制快捷鍵：
+   * 左箭頭： 後退5秒; 
+   * 右箭頭： 前進5秒; 
+   * p 或 / : 暫停播放切換
+  </span>
+</div>
+
+<!--
+<button align='right' id='changeSource' type="button">Load mp3</button>
+<button align='right' id='loadText' type="button">Load Text</button><br />
+<br /> <br />
+<label for="input">Subtitles </label> <br />
+<input type="file" id="file" name='input' onchange="loadFile(this.files)" /><br />
+<label for='inputType'><input type="radio" name="inputType" value="local" checked='true' />local</label><label for='inputType'><input type="radio" name="inputType" value="remote" />remote</label>
+<p id='pastebox'>or <button id='paste' type="button">paste in subtitles</button></p>
+-->
+<p id='error'></p>
+</div>
+<h2>菩提道次第廣論 手抄稿</h2>
+<!-- <div id='text' contenteditable="true"> -->
+<div id='text'>
+</div>
+<div id='contact' style="text-align: left; color: blue;">
+<br/>
+歡迎試用LR Player，如發現錯誤，請
+<a href="http://goo.gl/forms/u4fEkrTtEZtqrWgu2" target="_blank" onclick="ga('send', 'event', 'Link', 'Click', '廣論播放器');"><button>寫信給管理員</button></a>
+<br/>
+</div>
+<script>
+if(typeof console === "undefined") {
+    console = {
+        log: function() {},
+        info: function() {},
+        error: function() {},
+        warn: function () {}
+    };
+}
+
+//http://snippets.dzone.com/posts/show/5989
+function binarySearch(needle, haystack) {
+    if (typeof(haystack) === 'undefined' || !haystack.length) return -1;
+	
+	var high = haystack.length - 1;
+	var low = 0;
+	
+	while (low <= high) {
+		var mid = parseInt((low + high) / 2)
+		element = parseInt(haystack[mid].id,10);
+		if (element > needle) {
+			high = mid - 1;
+		}
+        else if (element < needle) {
+			low = mid + 1;
+		}
+        else {
+			return mid;
+		}
+	}
+	
+	return high;
+};
+
+var media=document.getElementsByTagName('audio')[0];
+var error= {
+    errorText : document.getElementById('error'),
+    report : function (text) {
+                this.errorText.innerHTML=text;
+            },
+    reset : function () {
+                this.errorText.innerHTML='';
+            }
+};
+
+var simpleLRCParser = {
+    canParse : function (subtitle) {
+        return (subtitle.search(/\[\d\d:\d\d\.\d\d\]/)!=-1);
+    },
+    
+    parse : function (subtitle, callback) {
+        var links=[];
+        var lines = subtitle.split(/\r\n|\n|\r/);
+        lines.forEach(function(line) {
+            var m=line.match(/\[(\d\d):(\d\d\.\d\d)\](.*)/);
+            if(m) {
+                var start=(parseInt(m[1], 10) * 60)+parseFloat(m[2]);
+                var text=m[3];
+                links.push({'start':start, 'text':text});
+            }
+        });
+        links.sort(function(a,b){return (a.start > b.start) ? 1 : ((b.start > a.start) ? -1 : 0);} );
+        return callback(links);
+    },
+}
+
+var multilineSRTParser = {
+    canParse : function (subtitle) {
+        var lines = subtitle.split(/\r\n|\n|\r/);
+        return (parseInt(lines[0],10)==1);
+    },
+    
+    parse : function (subtitle, callback) {
+        var links=[], inSub=false, start=null, text='';
+        var lines = subtitle.split(/\r\n|\n|\r/);
+        lines.forEach(function(line) {
+            if(inSub&&line.match(/^$/)) {
+                links.push({'start':start, 'text':text});
+                inSub=false;
+                start=null;
+                text='';
+            }
+            if(inSub===true) {
+                if(start!==null) {
+                    // text=text+line.trim();
+                    //!still not right !!!  text='<font color="grey">'+floor(start,60)+':'+(floor(start,1))%60+'</font>'+text+line;
+                    text=text+line;
+                }
+                else {
+                    // var m=line.match(/^(\d+):(\d+):(\d+)(?:,(\d+))?\s*--?>/);
+                    var m=line.match(/^(\d+):(\d+):(\d+)(?:,(\d+))?\s*/);
+                    start=(parseInt(m[1], 10) * 60 * 60)+(parseInt(m[2], 10) * 60)+(parseInt(m[3], 10))+(parseInt(m[4], 10) / 1000);
+                }
+            }
+            if(parseInt(line,10) == line ) {
+                inSub=true;
+            }
+        });
+        links.sort(function(a,b){return (a.start > b.start) ? 1 : ((b.start > a.start) ? -1 : 0);} );
+        return callback(links);
+    }
+};
+
+var SRTParser = {
+    canParse : function (subtitle) {
+        var lines = subtitle.split(/\r\n|\n|\r/);
+        return (lines[0].search(/^\d+\s(\d+):(\d+):(\d+)(?:,(\d+))?\s*--?>\s*(\d+):(\d+):(\d+)(?:,(\d+))?(.*)$/)!=-1);
+    },
+    
+    parse : function (subtitle, callback) {
+        var links = [];
+        var lines = subtitle.split(/\r\n|\n|\r/);
+        lines.forEach(function(line) {
+            var m=line.match(/\d+\s(\d+):(\d+):(\d+)(?:,(\d+))?\s*--?>\s*(\d+):(\d+):(\d+)(?:,(\d+))?(.*)/);
+            if(m) {
+                var start=(parseInt(m[1], 10) * 60 * 60)+(parseInt(m[2], 10) * 60)+(parseInt(m[3], 10))+(parseInt(m[4], 10) / 1000);
+                var text=m[9];
+                links.push({'start':start, 'text':text});
+            }
+        });
+        links.sort(function(a,b){return (a.start > b.start) ? 1 : ((b.start > a.start) ? -1 : 0);} );
+        return callback(links);
+    }
+};
+
+var ASSParser = {
+    canParse : function (subtitle) {
+        return (subtitle.search(/\[Events\]/)!=-1);
+    },
+    
+    parse : function (subtitle, callback) {
+        var links = [];
+        var lines = subtitle.split(/\r\n|\n|\r/);
+        var format = {
+            onEvent :false,
+            format : null,
+            is_defined : function(line) {
+                if(this.format) {
+                    return true;
+                }
+                if(this.onEvent) {
+                  var tokens=line.split(/,/);
+                  this.format={};
+                  for(var i=0; i < tokens.length; i++) {
+                      var token=tokens[i].trim();
+                      this.format[token]=i;
+                  }
+                  return false;
+                }
+                if(line.search(/\[Events\]/)!=-1) {
+                  this.onEvent=true;
+                  return;
+                }
+                return;
+            }
+        };       
+        lines.forEach(function(line) {
+            var next;
+            if(!format.is_defined(line)) {
+                next=true;
+            }
+            if(line.search(/^Dialogue/) ==-1) {
+                next=true;
+            }
+            if(!next) {
+                line=line.replace(/{.*?}/g, ''); //remove formatting
+                line=line.replace(/\\./g, ''); //remove escaped \ control characters
+
+                var tokens=line.split(/,/);
+                var start;
+                (function (time) {
+                    var m=time.match(/(\d):(\d\d):(\d\d)\.(\d\d)/);
+                    if (m) {
+                    return (parseInt(m[1], 10) * 60 * 60)+(parseInt(m[2], 10) * 60)+(parseInt(m[3], 10))+(parseInt(m[4], 10) / 1000);
+                    }
+                    return null;
+                })(tokens[format.format.Start].trim());
+                var text=tokens[format.format.Text].trim();
+                if(start === null) {
+                    console.warn('ASSParser: start time did not parse (%s); text:(%s)',tokens[format.format.Start].trim(),text);
+                }
+                else {
+                    links.push({'start':start, 'text':text});
+                }
+            }
+        });
+        links.sort(function(a,b){return (a.start > b.start) ? 1 : ((b.start > a.start) ? -1 : 0);} );
+        return callback(links);
+    }
+};
+
+var TRSParser = {
+    canParse : function (subtitle) {
+        return (subtitle.search(/(<!DOCTYPE Trans SYSTEM "trans-14\.dtd">)/)!=-1);
+    },
+    
+    parse : function (subtitle, callback) {
+        var links = [];
+        $(subtitle).find('Turn').each(function(){
+            var subLinks=[]
+            var contents=$(this).contents();
+            var start=null, text='';            
+            for(var i=0; i<contents.length; i++) {
+                var node=contents[i];
+                if(start===null&&node.nodeName==='SYNC') {
+                    start=parseFloat($(node).attr('time'));
+                }
+                else if(start!==null&&node.nodeType===3) {
+                    text=text+node.nodeValue;
+                }
+                else if(start!==null&&node.nodeName==='SYNC') {
+                    subLinks.push({start:start, text:text});
+                    start=parseFloat($(node).attr('time'));
+                    text='';
+                }
+            }
+            subLinks.push({start:start, text:text});
+            links.push(subLinks);
+        });
+        return callback(links);
+    }
+};
+
+function handleSubtitles(subtitle) {
+    var transcriptList = function (subtitles) {
+	var tape='';
+        tape+=$('#source').val()+$('#sourceAB').val();
+        var text='';
+        // text+="<h3>"+$('#source').val()+$('#sourceAB').val()+"</h3>";
+        text+="<h3>"+tape+"</h3>";
+	var isLRtext=false;
+	var newtext='';
+      if ( subtitle.indexOf("br/>") > -1 ) {
+        subtitles.forEach(function(line){
+            var mm=Math.floor(line.start/60);
+            var ss=Math.floor(line.start)%60;
+            var mmss=pad(mm,2)+":"+pad(ss,2);
+            // var LRtextStyle="<font weight='bold' color='#2a6496'>";
+            // var timestamp="<font color='blue'>"+pad(mm,2)+":"+pad(ss,2)+" </font>";
+            // var timestamp="<a class='stamp' >"+pad(mm,2)+":"+pad(ss,2)+" </a>";
+            var timestamp="<div class='stamp' >"+pad(mm,2)+":"+pad(ss,2)+" </div>";
+
+	    if (line.text.includes("br/>")) {
+              if (line.text.includes("lrbr/>")) {
+                 isLRtext=true;
+                 newtext="<br/>"+"<div class='LRtext'>"+timestamp+line.text.trim().replace("lrbr/>","br/>")+"</div>";
+              } else {
+                 isLRtext=false;
+		 // newtext="<br/>"+timestamp+"<br/>&emsp;&emsp;"+line.text.trim().replace("<br/>","");
+		 newtext="<div class='SFtext'>"+"<br/>"+timestamp+"<br/>&emsp;&emsp;"+line.text.trim().replace("<br/>","")+"</div>";
+              }
+              // text+="<a class=time href='javascript:(void(0))' id="+line.start+">"
+              text+="<a class=time href='javascript:(void(0))' title='"+mmss+"' id="+line.start+">"
+  	            +newtext+"</a>";
+            } else {
+              if (isLRtext) {
+	        newtext="<div class='LRtext'>"+line.text.trim()+"</div>";
+              } else {
+	       //  newtext=line.text.trim();
+	        newtext="<div class='SFtext'>"+line.text.trim()+"</div>";
+              }
+              // text+="<a class=time href='javascript:(void(0))' id="+line.start+">"+newtext+"</a>";
+              text+="<a class=time href='javascript:(void(0))' title='"+mmss+"' id="+line.start+">"+newtext+"</a>";
+            }
+
+        });
+      } else {
+        subtitles.forEach(function(line){
+            var mm=Math.floor(line.start/60);
+            var ss=Math.floor(line.start)%60;
+            var timestamp="<font color='gray'>"+pad(mm,2)+":"+pad(ss,2)+" </font>";
+            // var timestamp="<font color='gray'>"+tape+"  "+pad(mm,2)+":"+pad(ss,2)+" </font>";
+            text+="<a class='time' href='javascript:(void(0))' id='"+line.start+"''>"+timestamp+line.text+"</a>";
+            text+='<br />';
+        });
+      }
+        $('#text').html(text);
+    };
+    
+    var paragraphList = function (subtitles) {
+        var text = '';
+        subtitles.forEach(function(paragraph){
+            text+='<p class="paragraph">';
+            paragraph.forEach(function(line){
+                text+="<a class='time' id='"+line.start+"''>"+line.text+"</a>";
+            });
+            text+='</p>';
+        });
+        $('#text').html(text);
+    };
+    error.reset();
+    if(SRTParser.canParse(subtitle)) {
+        SRTParser.parse(subtitle,transcriptList);
+        console.info('parsing subtitles as srt');
+    }
+    else if(multilineSRTParser.canParse(subtitle)){
+        multilineSRTParser.parse(subtitle,transcriptList);
+        console.info('parsing subtitles as multiline srt');
+    }
+    else if(TRSParser.canParse(subtitle)){
+        TRSParser.parse(subtitle,paragraphList);
+        console.info('parsing subtitles as trs');
+    }
+    else if (simpleLRCParser.canParse(subtitle)){
+        simpleLRCParser.parse(subtitle,transcriptList);
+        console.info('parse subtitles as simple lrc');
+    }
+    else if(ASSParser.canParse(subtitle)){
+        ASSParser.parse(subtitle,transcriptList);
+        console.info('parsing subtitles as ASS');
+    }
+    else {
+        error.report("Could not parse subtitle");
+        console.error('Could not parse subtitle: %o',subtitle);
+    }
+}
+
+function loadFile(files) {
+        console.info(files);
+    var reader = new FileReader();
+    reader.onload=function(file) {
+        var f=file.target.result;
+        $('#file').val('');
+        handleSubtitles(f);
+        console.info('Loaded subtitles');
+    };
+    reader.readAsText(files[0]);
+}
+
+function loadFileUrl(uri) {
+        console.info(uri);
+        if(uri==='') {
+        console.info('changeSubs: uri was empty');
+        return;
+    }
+    $.ajax({
+        type: "GET",
+        url: uri,
+        success: function(x) {
+            if(x.length===0) {
+                error.report("Could not load "+uri);
+                console.error('Could not load: %s',uri);
+            }
+            else {
+                handleSubtitles(x);
+            }
+        },
+        error: function(x) {error.report("Could not load "+uri);console.error('Could not load: %s',uri); }
+    });
+}
+
+function changeSubs() {
+    var uri=$('#file').val();
+    if(uri==='') {
+        console.info('changeSubs: uri was empty');
+        return;
+    }
+    $.ajax({
+        type: "GET",
+        url: uri,
+        success: function(x) {
+            if(x.length===0) {
+                error.report("Could not load "+uri);
+                console.error('Could not load: %s',uri);
+            }
+            else {
+                handleSubtitles(x);
+            }
+        },
+        error: function(x) {error.report("Could not load "+uri);console.error('Could not load: %s',uri); }
+    });
+    
+}
+
+function highlight() {
+    if (media.paused || media.ended) {
+        var mm=Math.floor(media.currentTime/60);
+        var ss=Math.floor(media.currentTime)%60;
+        var ms=Math.floor((media.currentTime-mm*60-ss)*1000)
+        var mmssms=pad(mm,2)+":"+pad(ss,2)+"."+pad(ms,3);
+        console.info('media current time '+mmssms);
+        return;
+    }
+    var elements=document.getElementsByClassName('time');
+    var i=binarySearch(media.currentTime,elements);
+    $('.highlight').removeClass('highlight');
+    $(elements[i]).addClass('highlight');
+    //console.log('Element %o being highlighted',elements[i]);
+    setTimeout(highlight, 0);
+    if ($('#autoscroll').val() == 'on') {
+       var link=$('.highlight');
+       if (link.length===1) {
+	   if( link.position().top - self.pageYOffset > window.innerHeight*0.9 ) {
+             $(window).scrollTop(link.position().top-(window.innerHeight/10));
+	   }
+      }
+    }
+}
+ 
+function pad(num,size){return ('00'+num).substr(-size);}
+
+$(document).ready(function(){
+    if(typeof(FileReader)==='undefined') {
+        console.info('FileReader is undefined');
+        $('label[for=inputType]').remove();
+        $('#file').replaceWith('<input id="file" type="text" name="file" /><button type="button" onclick="changeSubs()">Load</button>');
+    }
+    
+    window.addEventListener('scroll',function(){
+        if( window.XMLHttpRequest ) {
+            var mediaBlock=document.getElementById('mediaBlock');
+            if (document.documentElement.scrollTop > 0 || self.pageYOffset > 0) {
+                mediaBlock.style.position='fixed';
+                mediaBlock.style.top='30';
+            } else if (document.documentElement.scrollTop < 0 || self.pageYOffset < 0) {
+                mediaBlock.style.position='absolute';
+                mediaBlock.style.top='30';
+            }
+        }
+    },false);
+    
+    media.addEventListener('play', function() {
+        setTimeout(highlight(), 0);
+    },false);
+    
+    media.addEventListener('loadedmetadata', function() {
+        // alert('The media has loaded');
+        error.reset();
+    },false);
+    
+    media.addEventListener('error',function(){
+        console.warn('Media element experienced error: %d',media.error.code);
+        switch(media.error.code) {
+            case 1:
+                error.report("Error Code 1: MEDIA_ERR_ABORTED <br /> The fetching process for the media resource was aborted by the user agent at the user's request.");
+                break;
+            case 2:
+                error.report("Error Code 2: MEDIA_ERR_NETWORK <br /> A network error of some description caused the user agent to stop fetching the media resource, after the resource was established to be usable.");
+                break;  
+            case 3:
+                error.report("Error Code 3: MEDIA_ERR_DECODE <br /> An error of some description occurred while decoding the media resource, after the resource was established to be usable.");
+                break;
+            case 4:
+                error.report("Error Code 4: MEDIA_ERR_SRC_NOT_SUPPORTED <br /> This media type or this location is not supported by your browser");
+                break;
+        }
+        
+    },false);
+    
+    $('#paste').click(function () {
+        var d=new Dialog({
+        content: '<h2>Paste in Subtitles</h2><textarea />',
+        buttons: {'OK': function() {
+                        handleSubtitles($("textarea").val());
+                        d.close();
+                    }
+                },
+        });
+    });
+    
+    $("input[name='inputType']").change(function() {
+        if($(this).val()=='remote') {
+            console.info('changing subtitle method to remote');
+            $('#file').replaceWith('<input id="file" type="text" name="file" /><button type="button" onclick="changeSubs()">Load</button>');
+        }
+        else {
+            console.info('changing subtitle method to local');
+            $('#file').next().remove();
+            $('#file').replaceWith('<input type="file" id="file" name="input" onchange="loadFile(this.files)" />');
+        }
+    });
+    
+    $('#changeSource').click(function () {
+        var input=$('#source').val();
+        var inputAB=$('#sourceAB').val();
+        // var inputAB=document.getElementById('sourceAB');
+        // var sourceurl="http://www.blisswisdom.net/lamrim1/";
+        var sourceurl="http://localhost/~yochen/audio/";
+        if(input) {
+            error.reset();
+            media.src=sourceurl+pad(input,3)+inputAB+".MP3";
+            media.load();
+            // console.info('changed source to %s',input);
+            console.info('changed source to %s',media.src);
+            var mediaBlock=document.getElementById('mediaBlock');
+            mediaBlock.style.width='40%';
+        }
+    });
+    
+function forward() {
+          var input=$('#source').val();
+          var inputAB=$('#sourceAB').val();
+          if (inputAB=="B") {
+             if (input > 0 & input <160 ) {
+                  input++;  inputAB="A";
+             }
+          }
+          else {
+             inputAB="B";
+          }
+          $('#source').val(input);
+          $('#sourceAB').val(inputAB);
+}
+
+function backward() {
+          var input=$('#source').val();
+          var inputAB=$('#sourceAB').val();
+          if (inputAB=="A") {
+             if (input > 1 & input <161 ) {
+                  input--;
+                  inputAB="B";
+             }
+          }
+          else {
+             inputAB="A";
+          }
+          $('#source').val(input);
+          $('#sourceAB').val(inputAB);
+}
+
+    $('#moveup').mousedown(function () {
+        forward();
+        mouseDownInc = true;
+        if (mouseDownInc) {
+          mouseDownAnim = setInterval(function(){
+            forward();
+          }, 200);
+        }
+    }); 
+    $('#moveup').mouseup(function () {
+       mouseDownInc = false; 
+       clearInterval(mouseDownAnim); 
+    }); 
+
+    $('#movedown').mousedown(function () {
+        backward();
+        mouseDownDec = true;
+        if (mouseDownDec) {
+          mouseDownAnim = setInterval(function(){
+            backward();
+          }, 200);
+        } 
+    }); 
+    $('#movedown').mouseup(function () {
+       mouseDownInc = false; 
+       clearInterval(mouseDownAnim); 
+    }); 
+
+    $('#loadText').click(function () {
+        var input=$('#source').val();
+        var inputAB=$('#sourceAB').val();
+        // var inputAB=document.getElementById('sourceAB');
+        var fileurl="http://localhost/~yochen/LR/subtitle_P/";
+        // var fileurl="http://pet148-1.sci.yorku.ca/~yochen/LR/subtitle/";
+        if(input) {
+            error.reset();
+            // fileurl=fileurl+pad(input,3)+inputAB+".SRT";
+            fileurl=fileurl+pad(input,3)+inputAB+".SRT";
+            loadFileUrl(fileurl);
+            console.info('Loading TEXT file %s',fileurl);
+        }
+    });
+
+    $('#loadAll').click(function () {
+        var input=$('#source').val();
+        var inputAB=$('#sourceAB').val();
+        // var sourceurl="http://www.blisswisdom.net/lamrim1/";
+        var sourceurl="http://localhost/~yochen/audio/";
+        var fileurl="http://localhost/~yochen/LR/subtitle_P/";
+        // var fileurl="http://pet148-1.sci.yorku.ca/~yochen/LR/subtitle/";
+        if(input) {
+            error.reset();
+            media.src=sourceurl+pad(input,3)+inputAB+".MP3";
+            media.load();
+            // console.info('changed source to %s',input);
+            console.info('changed source to %s',media.src);
+            var mediaBlock=document.getElementById('mediaBlock');
+            // mediaBlock.style.width='40%';
+            //fileurl=fileurl+pad(input,3)+inputAB+".SRT";
+            fileurl=fileurl+pad(input,3)+inputAB+".SRT";
+            loadFileUrl(fileurl);
+            console.info('Loading TEXT file %s',fileurl);
+	    $(window).scrollTop(0);
+        }
+    });
+
+    $('#loadAllPrevious').click(function () {
+        backward();
+        $('#loadAll').click();
+    });
+
+    $('#loadAllNext').click(function () {
+        forward();
+        $('#loadAll').click();
+    });
+
+//  $(document).ready(function () {
+
+        $("#toggleSFtext").click(function(){
+            console.info('toggleSFtext');
+            $('.SFtext').toggle(1,function() {
+                if ($(this).is(':visible'))
+                    $(this).css('display','inline');
+            }) 
+     	    return false;
+        });
+
+//  });
+
+	var changeFontSizeList=[".LRtext", ".SFtext", "h3"];
+
+        $("#largerFont").click(function(){
+	    changeFontSizeList.forEach(function(entry) {
+  	      console.info(entry);
+                var fontSize = parseInt($(entry).css("font-size"));
+                fontSize = fontSize + 2 + "px";
+                $(entry).css({'font-size':fontSize});
+            });
+        });
+
+        $("#smallerFont").click(function(){
+	    changeFontSizeList.forEach(function(entry) {
+  	      console.info(entry);
+                var fontSize = parseInt($(entry).css("font-size"));
+                fontSize = fontSize - 2 + "px";
+                $(entry).css({'font-size':fontSize});
+            });
+        });
+
+
+    
+    $("#text").delegate(".time", "click", function(){
+        var time=$(this).attr('id');
+        if(media.readyState===0) {
+            console.info('Media has not been loaded: %o',media);
+            media.load();
+        }
+        if(media.readyState>0) {
+            if(media.paused) {
+                media.play();
+            }
+            media.currentTime=time;
+            var mm=Math.floor(time/60);
+            var ss=Math.floor(time)%60;
+            var ms=Math.floor((time-mm*60-ss)*1000)
+            var mmssms=pad(mm,2)+":"+pad(ss,2)+"."+pad(ms,3);
+            console.info('Seeked to time '+mmssms);
+            //console.info('Seeked to time '+time);
+        }
+        else {
+            error.report('Media has not finished loading yet');
+            console.info('Media has not been loaded: %o',media);
+        }
+    });
+    
+    $('#scroll').click(function () {
+        var link=$('.highlight');
+        if (link.length===1) {
+            // $(window).scrollTop(link.position().top-(window.innerHeight/2));
+            $(window).scrollTop(link.position().top-(window.innerHeight/10));
+        }
+    });
+
+});
+</script>
+<!-- script src="http://download.arefly.com/chinese_convert.js"></script -->
+
+<script src="chinese_convert.js"></script>
+<script>
+var defaultEncoding = 1; // 預設語言：1-繁體中文 | 2-简体中文
+var translateDelay = 0;
+var cookieDomain = "http://localhost";	// 修改爲你的部落格地址
+var msgToTraditionalChinese = "轉換爲繁體";	// 簡轉繁時所顯示的文字
+var msgToSimplifiedChinese = "转换为简体"; 	// 繁转简时所显示的文字
+var translateButtonId = "translateLink";	// 「轉換」<A>鏈接標籤ID
+// cys: need to comment out next line when we use this chinese_convert function 
+// translateInitilization();
+</script>
+
+</body>
+</html>
