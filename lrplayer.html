@@ -28,7 +28,7 @@
 <head>
 <title>廣論字幕播放</title>
 <meta HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
-<link rel="stylesheet" href="http://localhost/~yochen/LR/trans/css/simple-dialog.css" type="text/css" media="all" />
+<link rel="stylesheet" href="css/simple-dialog.css" type="text/css" media="all" />
 <link rel="icon" href="data:,">
 <style>
 #mediaBlock {
@@ -212,8 +212,8 @@ input.switch:checked ~ label:after {
 <script>!window.jQuery && document.write('<script src="js/jquery-1.4.2.min.js"><\/script>')</script>
 <script src="http://javascript-simple-dialog.googlecode.com/svn/trunk/simple-dialog.js" type="text/javascript"></script>
 --!>
-<script src="http://localhost/~yochen/LR/trans/js/jquery-1.4.2.min.js" type="text/javascript"></script>
-<script src="http://localhost/~yochen/LR/trans/js/simple-dialog.js" type="text/javascript"></script>
+<script src="js/jquery-1.4.2.min.js" type="text/javascript"></script>
+<script src="js/simple-dialog.js" type="text/javascript"></script>
 </head>
 <body style="background-color:#F7F5E5;">
 <div id='mediaBlock'>
@@ -777,7 +777,7 @@ $(document).ready(function(){
         var inputAB=$('#sourceAB').val();
         // var inputAB=document.getElementById('sourceAB');
         // var sourceurl="http://www.blisswisdom.net/lamrim1/";
-        var sourceurl="http://localhost/~yochen/audio/";
+        var sourceurl="audio/";
         if(input) {
             error.reset();
             media.src=sourceurl+pad(input,3)+inputAB+".MP3";
@@ -852,7 +852,7 @@ function backward() {
         var input=$('#source').val();
         var inputAB=$('#sourceAB').val();
         // var inputAB=document.getElementById('sourceAB');
-        var fileurl="http://localhost/~yochen/LR/subtitle_P/";
+        var fileurl="subtitle_P/";
         // var fileurl="http://pet148-1.sci.yorku.ca/~yochen/LR/subtitle/";
         if(input) {
             error.reset();
@@ -867,8 +867,8 @@ function backward() {
         var input=$('#source').val();
         var inputAB=$('#sourceAB').val();
         // var sourceurl="http://www.blisswisdom.net/lamrim1/";
-        var sourceurl="http://localhost/~yochen/audio/";
-        var fileurl="http://localhost/~yochen/LR/subtitle_P/";
+        var sourceurl="audio/";
+        var fileurl="subtitle_P/";
         // var fileurl="http://pet148-1.sci.yorku.ca/~yochen/LR/subtitle/";
         if(input) {
             error.reset();
